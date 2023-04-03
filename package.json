@@ -1,6 +1,6 @@
 {
   "name": "gpt4all",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "GPT4All Typescript package",
   "main": "dist/gpt4all.js",
   "types": "dist/gpt4all.d.ts",
