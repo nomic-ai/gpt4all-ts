@@ -159,7 +159,7 @@ Intel Mac/OSX: cd chat;./gpt4all-lora-quantized-OSX-intel
         this.bot.stdin.write(prompt + "\n");
     
         return new Promise((resolve, reject) => {
-            let response: string = "";
+            let response: Buffer[] = [];
             let timeoutId: NodeJS.Timeout;
     
             const onStdoutData = (data: Buffer) => {
@@ -170,15 +170,15 @@ Intel Mac/OSX: cd chat;./gpt4all-lora-quantized-OSX-intel
             
                 if (text.includes(">")) {
                     // console.log('Response starts with >, end of message - Resolving...'); // Debug log: Indicate that the response ends with "\\f"
-                    terminateAndResolve(response); // Remove the trailing "\f" delimiter
+                    terminateAndResolve(response.toString()); // Remove the trailing "\f" delimiter
                 } else {
                     timeoutId = setTimeout(() => {
                         // console.log('Timeout reached - Resolving...'); // Debug log: Indicate that the timeout has been reached
-                        terminateAndResolve(response);
+                        terminateAndResolve(response.toString());
                     }, 4000); // Set a timeout of 4000ms to wait for more data
                 }
                 // console.log('Received text:', text); // Debug log: Show the received text
-                response += text;
+                response.push(data);
                 // console.log('Updated response:', response); // Debug log: Show the updated response
 
             };
