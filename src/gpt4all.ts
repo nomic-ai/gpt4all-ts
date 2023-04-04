@@ -151,6 +151,8 @@ Intel Mac/OSX: cd chat;./gpt4all-lora-quantized-OSX-intel
         });
     }
 
+
+
     public prompt(prompt: string): Promise<string> {
         if (this.bot === null) {
             throw new Error("Bot is not initialized.");
@@ -161,7 +163,11 @@ Intel Mac/OSX: cd chat;./gpt4all-lora-quantized-OSX-intel
         return new Promise((resolve, reject) => {
             let response: Buffer[] = [];
             let timeoutId: NodeJS.Timeout;
-    
+
+            const bufferListToString = (bufferList: Buffer[]): string => {
+                return Buffer.concat(bufferList).toString();
+            }
+
             const onStdoutData = (data: Buffer) => {
                 const text = data.toString();
                 if (timeoutId) {
@@ -170,11 +176,11 @@ Intel Mac/OSX: cd chat;./gpt4all-lora-quantized-OSX-intel
             
                 if (text.includes(">")) {
                     // console.log('Response starts with >, end of message - Resolving...'); // Debug log: Indicate that the response ends with "\\f"
-                    terminateAndResolve(response.toString()); // Remove the trailing "\f" delimiter
+                    terminateAndResolve(bufferListToString(response)); // Remove the trailing "\f" delimiter
                 } else {
                     timeoutId = setTimeout(() => {
                         // console.log('Timeout reached - Resolving...'); // Debug log: Indicate that the timeout has been reached
-                        terminateAndResolve(response.toString());
+                        terminateAndResolve(bufferListToString(response));
                     }, 4000); // Set a timeout of 4000ms to wait for more data
                 }
                 // console.log('Received text:', text); // Debug log: Show the received text
@@ -198,6 +204,8 @@ Intel Mac/OSX: cd chat;./gpt4all-lora-quantized-OSX-intel
                 }
                 resolve(finalResponse);
             };
+
+
     
             this.bot.stdout.on("data", onStdoutData);
             this.bot.stdout.on("error", onStdoutError);
