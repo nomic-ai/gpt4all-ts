@@ -12,7 +12,7 @@ export class GPT4All {
     private executablePath: string;
     private modelPath: string;
     
-    constructor(model: string = 'gpt4all-lora-quantized', forceDownload: boolean = false, decoderConfig: Record<string, any> = {}) {
+    constructor(model: string = 'gpt4all-lora-quantized', decoderConfig: Record<string, any> = {}) {
         this.model = model;
         this.decoderConfig = decoderConfig;
     /* 
