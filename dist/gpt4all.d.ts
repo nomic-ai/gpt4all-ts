@@ -4,7 +4,7 @@ export declare class GPT4All {
     private decoderConfig;
     private executablePath;
     private modelPath;
-    constructor(model?: string, forceDownload?: boolean, decoderConfig?: Record<string, any>);
+    constructor(model?: string, decoderConfig?: Record<string, any>);
     init(forceDownload?: boolean): Promise<void>;
     open(): Promise<void>;
     close(): void;
