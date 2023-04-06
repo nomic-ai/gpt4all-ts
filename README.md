@@ -48,7 +48,7 @@ const main = async () => {
     // Initialize and download missing files
     await gpt4all.init(true);
 
-    // Open the conection with the model
+    // Open the connection with the model
     await gpt4all.open();
     // Generate a response using a prompt
     const prompt = 'Tell me about how Open Access to AI is going to help humanity.';
