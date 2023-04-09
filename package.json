@@ -7,6 +7,9 @@
   "author": "Conner Swann <conner@intuitivesystems.xyz>",
   "license": "MIT",
   "private": false,
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url" : "https://github.com/nomic-ai/gpt4all-ts"
