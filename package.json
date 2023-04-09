@@ -6,13 +6,13 @@
   "types": "dist/gpt4all.d.ts",
   "author": "Conner Swann <conner@intuitivesystems.xyz>",
   "license": "MIT",
-  "private": false,
+  "packageManager": "yarn@1.22.19",
   "files": [
     "dist"
   ],
   "repository": {
     "type": "git",
-    "url" : "https://github.com/nomic-ai/gpt4all-ts"
+    "url": "https://github.com/nomic-ai/gpt4all-ts"
   },
   "scripts": {
     "build": "tsc",
@@ -24,6 +24,7 @@
     "progress": "^2.0.3"
   },
   "devDependencies": {
-    "@types/progress": "^2.0.5"
+    "@types/progress": "^2.0.5",
+    "typescript": "5.0.4"
   }
 }
