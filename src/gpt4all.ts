@@ -1,10 +1,15 @@
-import {exec, spawn} from 'child_process';
-import {promisify} from 'util';
-import * as fs from 'fs';
-import * as os from 'os';
+import { exec, spawn } from 'child_process';
+import { promisify } from 'util';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
 import axios from 'axios';
-import * as ProgressBar from 'progress';
+import ProgressBar from 'progress';
+import { GPT4AllOptions, isSupportedModel, SUPPORTED_MODELS } from './types';
 
+/**
+ * A wrapper class around [gpt4all](https://github.com/nomic-ai/gpt4all).
+ */
 export class GPT4All {
     private bot: ReturnType<typeof spawn> | null = null;
     private model: string;
@@ -12,9 +17,10 @@ export class GPT4All {
     private executablePath: string;
     private modelPath: string;
     
-    constructor(model: string = 'gpt4all-lora-quantized', forceDownload: boolean = false, decoderConfig: Record<string, any> = {}) {
-        this.model = model;
-        this.decoderConfig = decoderConfig;
+    constructor(options: GPT4AllOptions = {}) {
+        this.model = options.model || 'gpt4all-lora-quantized';
+        this.decoderConfig = options.decoderConfig || {};
+
     /* 
     allowed models: 
     M1 Mac/OSX: cd chat;./gpt4all-lora-quantized-OSX-m1
@@ -22,18 +28,16 @@ Linux: cd chat;./gpt4all-lora-quantized-linux-x86
 Windows (PowerShell): cd chat;./gpt4all-lora-quantized-win64.exe
 Intel Mac/OSX: cd chat;./gpt4all-lora-quantized-OSX-intel
     */
-        if (
-            'gpt4all-lora-quantized' !== model && 
-            'gpt4all-lora-unfiltered-quantized' !== model
-        ) {
-            throw new Error(`Model ${model} is not supported. Current models supported are: 
-                gpt4all-lora-quantized
-                gpt4all-lora-unfiltered-quantized`
+        if (!isSupportedModel(this.model)) {
+            throw new Error(
+                `Model ${this.model} is not supported. Current models supported are: \n` +
+                SUPPORTED_MODELS.map(m => ` - ${m}`).join('\n')
             );
         }
 
-        this.executablePath = `${os.homedir()}/.nomic/gpt4all`;
-        this.modelPath = `${os.homedir()}/.nomic/${model}.bin`; 
+        const nomicHome = options.nomicHome || path.join(os.homedir(),'.nomic');
+        this.executablePath = path.join(nomicHome, 'gpt4all');
+        this.modelPath = path.join(nomicHome, `${this.model}.bin`);
     }
 
     async init(forceDownload: boolean = false): Promise<void> {

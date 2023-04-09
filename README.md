@@ -43,8 +43,10 @@ import { GPT4All } from 'gpt4all';
 
 const main = async () => {
     // Instantiate GPT4All with default or custom settings
-    const gpt4all = new GPT4All('gpt4all-lora-unfiltered-quantized', true); // Default is 'gpt4all-lora-quantized' model
-  
+    const gpt4all = new GPT4All({
+      model: 'gpt4all-lora-unfiltered-quantized' // Default is 'gpt4all-lora-quantized' model
+    });
+
     // Initialize and download missing files
     await gpt4all.init();
 
