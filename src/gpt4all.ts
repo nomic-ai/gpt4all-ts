@@ -20,6 +20,7 @@ export class GPT4All {
     private decoderConfig: Partial<GPTArguments>;
     private executablePath: string;
     private modelPath: string;
+    private downloadPromises: Promise<void>[] = [];
 
     constructor(
         model: AvailableModels = 'gpt4all-lora-quantized',
@@ -45,9 +46,11 @@ export class GPT4All {
 
         this.executablePath = `${os.homedir()}/.nomic/gpt4all`;
         this.modelPath = `${os.homedir()}/.nomic/${model}.bin`;
+        if (forceDownload) this.init(forceDownload);
     }
 
     async init(forceDownload: boolean = false): Promise<void | void[]> {
+        if (this.downloadPromises) return Promise.all(this.downloadPromises);
         const downloadPromises: Promise<void>[] = [];
 
         if (forceDownload || !existsSync(this.executablePath)) {
