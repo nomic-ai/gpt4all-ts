@@ -4,7 +4,20 @@
     "description": "GPT4All Typescript package",
     "type": "module",
     "main": "dist/gpt4all.js",
+    "module": "dist/gpt4all.js",
     "types": "dist/gpt4all.d.ts",
+    "files": [
+        "dist",
+        "src"
+    ],
+    "exports": {
+        ".": {
+            "import": "./dist/gpt4all.js",
+            "require": "./dist/gpt4all.js"
+        },
+        "./types": "./dist/index.d.ts"
+    },
+    "sideEffects": false,
     "author": "Conner Swann <conner@intuitivesystems.xyz>",
     "license": "MIT",
     "private": false,
