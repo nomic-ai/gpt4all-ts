@@ -1,21 +1,30 @@
-import { exec, spawn } from 'child_process';
-import { promisify } from 'util';
-import * as fs from 'fs';
-import * as os from 'os';
+import { exec, spawn, ChildProcessByStdio } from 'node:child_process';
+import type { Writable, Readable } from 'node:stream';
+import { promisify } from 'node:util';
+import { existsSync, chmod, mkdir, createWriteStream } from 'node:fs';
+import * as os from 'node:os';
 import axios from 'axios';
 import * as ProgressBar from 'progress';
+import { GPTArguments } from './types';
+
+const availableModels = [
+    'gpt4all-lora-quantized',
+    'gpt4all-lora-unfiltered-quantized',
+] as const;
+
+export type AvailableModels = (typeof availableModels)[number];
 
 export class GPT4All {
-    private bot: ReturnType<typeof spawn> | null = null;
-    private model: string;
-    private decoderConfig: Record<string, any>;
+    private bot: ChildProcessByStdio<Writable, Readable, null> | null = null;
+    private model: AvailableModels;
+    private decoderConfig: Partial<GPTArguments>;
     private executablePath: string;
     private modelPath: string;
 
     constructor(
-        model: string = 'gpt4all-lora-quantized',
+        model: AvailableModels = 'gpt4all-lora-quantized',
         forceDownload: boolean = false,
-        decoderConfig: Record<string, any> = {},
+        decoderConfig: Partial<GPTArguments> = {},
     ) {
         this.model = model;
         this.decoderConfig = decoderConfig;
@@ -26,37 +35,34 @@ export class GPT4All {
             Windows (PowerShell): cd chat;./gpt4all-lora-quantized-win64.exe
             Intel Mac/OSX: cd chat;./gpt4all-lora-quantized-OSX-intel
         */
-        if (
-            'gpt4all-lora-quantized' !== model &&
-            'gpt4all-lora-unfiltered-quantized' !== model
-        ) {
-            throw new Error(`Model ${model} is not supported. Current models supported are:
-                gpt4all-lora-quantized
-                gpt4all-lora-unfiltered-quantized`);
+        if (!availableModels.includes(model as AvailableModels)) {
+            throw new Error(
+                `Model ${model} is not supported. Current models supported are:\n${availableModels.join(
+                    ',\n',
+                )}`,
+            );
         }
 
         this.executablePath = `${os.homedir()}/.nomic/gpt4all`;
         this.modelPath = `${os.homedir()}/.nomic/${model}.bin`;
     }
 
-    async init(forceDownload: boolean = false): Promise<void> {
+    async init(forceDownload: boolean = false): Promise<void | void[]> {
         const downloadPromises: Promise<void>[] = [];
 
-        if (forceDownload || !fs.existsSync(this.executablePath)) {
+        if (forceDownload || !existsSync(this.executablePath)) {
             downloadPromises.push(this.downloadExecutable());
         }
 
-        if (forceDownload || !fs.existsSync(this.modelPath)) {
+        if (forceDownload || !existsSync(this.modelPath)) {
             downloadPromises.push(this.downloadModel());
         }
 
-        await Promise.all(downloadPromises);
+        return Promise.all(downloadPromises);
     }
 
     public async open(): Promise<void> {
-        if (this.bot !== null) {
-            this.close();
-        }
+        if (this.bot !== null) this.close();
 
         let spawnArgs = [this.executablePath, '--model', this.modelPath];
 
@@ -64,24 +70,24 @@ export class GPT4All {
             spawnArgs.push(`--${key}`, value.toString());
         }
 
-        this.bot = spawn(spawnArgs[0], spawnArgs.slice(1), {
+        const bot = spawn(spawnArgs[0], spawnArgs.slice(1), {
             stdio: ['pipe', 'pipe', 'ignore'],
         });
+        this.bot = bot;
+
         // wait for the bot to be ready
-        await new Promise((resolve) => {
-            this.bot?.stdout?.on('data', (data) => {
-                if (data.toString().includes('>')) {
-                    resolve(true);
-                }
-            });
-        });
+        await new Promise((resolve) =>
+            bot.stdout.on(
+                'data',
+                (data) => data.toString().includes('>') && resolve(true),
+            ),
+        );
     }
 
     public close(): void {
-        if (this.bot !== null) {
-            this.bot.kill();
-            this.bot = null;
-        }
+        if (this.bot === null) return;
+        this.bot.kill();
+        this.bot = null;
     }
 
     private async downloadExecutable(): Promise<void> {
@@ -112,7 +118,7 @@ export class GPT4All {
 
         await this.downloadFile(upstream, this.executablePath);
 
-        fs.chmod(this.executablePath, 0o755, (err) => {
+        chmod(this.executablePath, 0o755, (err) => {
             if (err) {
                 throw err;
             }
@@ -144,13 +150,13 @@ export class GPT4All {
             total: totalSize,
         });
         const dir = new URL(`file://${os.homedir()}/.nomic/`);
-        fs.mkdir(dir, { recursive: true }, (err) => {
+        mkdir(dir, { recursive: true }, (err) => {
             if (err) {
                 throw err;
             }
         });
 
-        const writer = fs.createWriteStream(destination);
+        const writer = createWriteStream(destination);
 
         data.on('data', (chunk: any) => {
             progressBar.tick(chunk.length);
@@ -165,11 +171,12 @@ export class GPT4All {
     }
 
     public prompt(prompt: string): Promise<string> {
-        if (this.bot === null) {
+        const bot = this.bot;
+        if (bot === null) {
             throw new Error('Bot is not initialized.');
         }
 
-        this.bot.stdin.write(prompt + '\n');
+        bot.stdin.write(prompt + '\n');
 
         return new Promise((resolve, reject) => {
             let response: string = '';
@@ -200,14 +207,14 @@ export class GPT4All {
             };
 
             const onStdoutError = (err: Error) => {
-                this.bot.stdout.removeListener('data', onStdoutData);
-                this.bot.stdout.removeListener('error', onStdoutError);
+                bot.stdout.removeListener('data', onStdoutData);
+                bot.stdout.removeListener('error', onStdoutError);
                 reject(err);
             };
 
             const terminateAndResolve = (finalResponse: string) => {
-                this.bot.stdout.removeListener('data', onStdoutData);
-                this.bot.stdout.removeListener('error', onStdoutError);
+                bot.stdout.removeListener('data', onStdoutData);
+                bot.stdout.removeListener('error', onStdoutError);
                 // check for > at the end and remove it
                 if (finalResponse.endsWith('>')) {
                     finalResponse = finalResponse.slice(0, -1);
@@ -215,8 +222,8 @@ export class GPT4All {
                 resolve(finalResponse);
             };
 
-            this.bot.stdout.on('data', onStdoutData);
-            this.bot.stdout.on('error', onStdoutError);
+            bot.stdout.on('data', onStdoutData);
+            bot.stdout.on('error', onStdoutError);
         });
     }
 }

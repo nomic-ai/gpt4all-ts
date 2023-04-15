@@ -1,8 +1,14 @@
 {
     "compilerOptions": {
         "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
         "outDir": "dist",
         "rootDir": "src",
-        "lib": ["es2022", "dom"],
+        "module": "es2022",
+        "moduleResolution": "node",
+        "skipLibCheck": true,
+        "strict": true,
+        "target": "esNext"
     }
 }
