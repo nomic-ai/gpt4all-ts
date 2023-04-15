@@ -1,5 +1,5 @@
 import { GPTArguments } from './types';
-declare const availableModels: readonly ["gpt4all-lora-quantized", "gpt4all-lora-unfiltered-quantized"];
+declare const availableModels: readonly ["gpt4all-lora-quantized"];
 export type AvailableModels = (typeof availableModels)[number];
 export declare class GPT4All {
     private bot;
