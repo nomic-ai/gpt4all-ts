@@ -15,6 +15,7 @@ export declare class GPT4All {
     private downloadExecutable;
     private downloadModel;
     private downloadFile;
+    proompt(prompt: string): Promise<string>;
     prompt(prompt: string): Promise<string>;
 }
 export {};

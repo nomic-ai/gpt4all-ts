@@ -47,8 +47,7 @@ export class GPT4All {
         return Promise.all(downloadPromises);
     }
     async open() {
-        if (this.bot !== null)
-            this.close();
+        this.close();
         let spawnArgs = [this.executablePath, '--model', this.modelPath];
         for (let [key, value] of Object.entries(this.decoderConfig)) {
             spawnArgs.push(`--${key}`, value.toString());
@@ -58,7 +57,15 @@ export class GPT4All {
         });
         this.bot = bot;
         // wait for the bot to be ready
-        await new Promise((resolve) => bot.stdout.on('data', (data) => data.toString().includes('>') && resolve(true)));
+        await new Promise((resolve) => {
+            const startupListener = (data) => {
+                if (!data.toString().includes('>'))
+                    return;
+                resolve(true);
+                bot.stdout.removeListener('data', startupListener);
+            };
+            bot.stdout.addListener('data', startupListener);
+        });
     }
     close() {
         if (this.bot === null)
@@ -112,6 +119,9 @@ export class GPT4All {
             }
         });
     }
+    proompt(prompt) {
+        return this.prompt(prompt);
+    }
     prompt(prompt) {
         const bot = this.bot;
         if (bot === null) {
@@ -158,8 +168,8 @@ export class GPT4All {
                 }
                 resolve(finalResponse);
             };
-            bot.stdout.on('data', onStdoutData);
-            bot.stdout.on('error', onStdoutError);
+            bot.stdout.addListener('data', onStdoutData);
+            bot.stdout.addListener('error', onStdoutError);
         });
     }
 }
