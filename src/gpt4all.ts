@@ -66,7 +66,7 @@ export class GPT4All {
     }
 
     public async open(): Promise<void> {
-        if (this.bot !== null) this.close();
+        this.close();
 
         let spawnArgs = [this.executablePath, '--model', this.modelPath];
 
@@ -80,12 +80,14 @@ export class GPT4All {
         this.bot = bot;
 
         // wait for the bot to be ready
-        await new Promise((resolve) =>
-            bot.stdout.on(
-                'data',
-                (data) => data.toString().includes('>') && resolve(true),
-            ),
-        );
+        await new Promise((resolve) => {
+            const startupListener = (data: Buffer) => {
+                if (!data.toString().includes('>')) return;
+                resolve(true);
+                bot.stdout.removeListener('data', startupListener);
+            };
+            bot.stdout.addListener('data', startupListener);
+        });
     }
 
     public close(): void {
@@ -150,6 +152,10 @@ export class GPT4All {
         });
     }
 
+    public proompt(prompt: string): Promise<string> {
+        return this.prompt(prompt);
+    }
+
     public prompt(prompt: string): Promise<string> {
         const bot = this.bot;
         if (bot === null) {
@@ -202,8 +208,8 @@ export class GPT4All {
                 resolve(finalResponse);
             };
 
-            bot.stdout.on('data', onStdoutData);
-            bot.stdout.on('error', onStdoutError);
+            bot.stdout.addListener('data', onStdoutData);
+            bot.stdout.addListener('error', onStdoutError);
         });
     }
 }
