@@ -181,7 +181,7 @@ export class GPT4All {
                     clearTimeout(timeoutId);
                 }
 
-                if (text.includes('>')) {
+                if (/^\u{001B}.*\n>\s?/mu.test(text)) {
                     // console.log('Response starts with >, end of message - Resolving...');
                     // Debug log: Indicate that the response ends with "\\f"
                     terminateAndResolve(response); // Remove the trailing "\f" delimiter
