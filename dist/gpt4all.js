@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 import { existsSync, createWriteStream } from 'node:fs';
 import { chmod, mkdir } from 'node:fs/promises';
 import * as os from 'node:os';
+import { get } from 'node:https';
 import ProgressBar from 'progress';
 /*
   allowed models:
@@ -84,39 +85,27 @@ export class GPT4All {
         await this.downloadFile(modelUrl, this.modelPath);
         console.log(`File downloaded successfully to ${this.modelPath}`);
     }
-    async downloadFile(url, destination) {
-        const response = await fetch(url);
-        if (!response.ok)
-            return Promise.reject(new Error('Failed to download'));
-        const downloadBody = response.body;
-        if (downloadBody === null)
-            return Promise.reject(new Error('Failed to download'));
-        const totalSize = Number(response.headers.get('content-length')) || 0;
-        const progressBar = new ProgressBar('[:bar] :percent :etas', {
-            complete: '=',
-            incomplete: ' ',
-            width: 20,
-            total: totalSize,
-        });
-        const dir = new URL(`file://${os.homedir()}/.nomic/`);
-        await mkdir(dir, { recursive: true });
-        const writer = createWriteStream(destination);
-        const downloadStream = downloadBody.getReader();
+    downloadFile(url, destination) {
         return new Promise(async (resolve, reject) => {
-            try {
-                while (true) {
-                    const { done, value } = await downloadStream.read();
-                    if (done)
-                        return resolve();
-                    if (!value)
-                        continue;
-                    progressBar.tick(value.length);
-                    writer.write(value);
-                }
-            }
-            catch (e) {
-                reject(e);
-            }
+            const dir = new URL(`file://${os.homedir()}/.nomic/`);
+            await mkdir(dir, { recursive: true });
+            const response = await followRedirects(url);
+            if (response.statusCode !== 200)
+                return reject(response.statusCode || 'Failed to download');
+            const totalSize = Number(response.headers['content-length']) || 0;
+            if (totalSize === 0)
+                return reject('Failed to download: No download size provided by server');
+            const writer = createWriteStream(destination);
+            const progressBar = new ProgressBar('[:bar] :percent :etas', {
+                complete: '=',
+                incomplete: ' ',
+                width: 20,
+                total: totalSize,
+            });
+            writer.addListener('finish', resolve);
+            writer.addListener('error', reject);
+            response.pipe(writer);
+            response.addListener('data', (chunk) => progressBar.tick(chunk.length));
         });
     }
     proompt(prompt) {
@@ -186,5 +175,13 @@ const getModelUrl = async (_model) => {
     if (stdout.trim() === 'arm64')
         return MODEL_URL_BASE + 'gpt4all-lora-quantized-OSX-m1?raw=true';
     return MODEL_URL_BASE + 'gpt4all-lora-quantized-OSX-intel?raw=true';
+};
+const followRedirects = async (url) => {
+    if (url === undefined)
+        throw new Error('No URL provided');
+    const response = await new Promise((res) => get(url, (msg) => res(msg)));
+    if (response.statusCode === 301 || response.statusCode === 302)
+        return followRedirects(response.headers.location);
+    return response;
 };
 //# sourceMappingURL=gpt4all.js.map
