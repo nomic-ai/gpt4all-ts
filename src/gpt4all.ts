@@ -87,16 +87,16 @@ Intel Mac/OSX: cd chat;./gpt4all-lora-quantized-OSX-intel
             // check for M1 Mac
             const {stdout} = await promisify(exec)('uname -m');
             if (stdout.trim() === 'arm64') {
-                upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/chat/gpt4all-lora-quantized-OSX-m1?raw=true';
+                upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/gpt4all-training/chat/gpt4all-lora-quantized-OSX-m1?raw=true';
             } else {
-                upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/chat/gpt4all-lora-quantized-OSX-intel?raw=true';
+                upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/gpt4all-training/chat/gpt4all-lora-quantized-OSX-intel?raw=true';
             }
         } 
         else if (platform === 'linux') {
-            upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/chat/gpt4all-lora-quantized-linux-x86?raw=true';
+            upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/gpt4all-training/chat/gpt4all-lora-quantized-linux-x86?raw=true';
         } 
         else if(platform === 'win32') {
-            upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/chat/gpt4all-lora-quantized-win64.exe?raw=true';
+            upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/gpt4all-training/chat/gpt4all-lora-quantized-win64.exe?raw=true';
         } 
         else {
             throw new Error(`Your platform is not supported: ${platform}. Current binaries supported are for OSX (ARM and Intel), Linux and Windows.`);
