@@ -1,3 +1,5 @@
+### This repository is no longer maintained. Please visit https://github.com/nomic-ai/gpt4all/tree/main/gpt4all-bindings/typescript for progress on typescript bindings.
+
 # gpt4all-ts 🌐🚀📚
 
 ⚠️ Does not yet support GPT4All-J
