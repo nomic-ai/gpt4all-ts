@@ -35,7 +35,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.GPT4All = void 0;
 var child_process_1 = require("child_process");
 var util_1 = require("util");
@@ -138,18 +138,18 @@ var GPT4All = /** @class */ (function () {
                     case 1:
                         stdout = (_a.sent()).stdout;
                         if (stdout.trim() === 'arm64') {
-                            upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/chat/gpt4all-lora-quantized-OSX-m1?raw=true';
+                            upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/gpt4all-training/chat/gpt4all-lora-quantized-OSX-m1?raw=true';
                         }
                         else {
-                            upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/chat/gpt4all-lora-quantized-OSX-intel?raw=true';
+                            upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/gpt4all-training/chat/gpt4all-lora-quantized-OSX-intel?raw=true';
                         }
                         return [3 /*break*/, 3];
                     case 2:
                         if (platform === 'linux') {
-                            upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/chat/gpt4all-lora-quantized-linux-x86?raw=true';
+                            upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/gpt4all-training/chat/gpt4all-lora-quantized-linux-x86?raw=true';
                         }
                         else if (platform === 'win32') {
-                            upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/chat/gpt4all-lora-quantized-win64.exe?raw=true';
+                            upstream = 'https://github.com/nomic-ai/gpt4all/blob/main/gpt4all-training/chat/gpt4all-lora-quantized-win64.exe?raw=true';
                         }
                         else {
                             throw new Error("Your platform is not supported: ".concat(platform, ". Current binaries supported are for OSX (ARM and Intel), Linux and Windows."));
@@ -192,7 +192,7 @@ var GPT4All = /** @class */ (function () {
             var _a, data, headers, totalSize, progressBar, dir, writer;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0: return [4 /*yield*/, axios_1["default"].get(url, { responseType: 'stream' })];
+                    case 0: return [4 /*yield*/, axios_1.default.get(url, { responseType: 'stream' })];
                     case 1:
                         _a = _b.sent(), data = _a.data, headers = _a.headers;
                         totalSize = parseInt(headers['content-length'], 10);
@@ -200,7 +200,7 @@ var GPT4All = /** @class */ (function () {
                             complete: '=',
                             incomplete: ' ',
                             width: 20,
-                            total: totalSize
+                            total: totalSize,
                         });
                         dir = new URL("file://".concat(os.homedir(), "/.nomic/"));
                         return [4 /*yield*/, fs.mkdir(dir, { recursive: true }, function (err) {
